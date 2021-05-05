@@ -1,0 +1,25 @@
+{{#> site }}
+
+    <div>{{pageTitle}}</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Interval</th>
+                <th>Time to next</th>
+                <th>Last Performed</th>
+                <th>Next Reminder</th>
+            </tr>
+        </thead>
+        {{#each agents}}
+            <tr>
+                <td>{{this.title}}</td>
+                <td>{{this.interval?.days}}</td>
+                <td>{{this.timeToNext}} +- 7 days</td>
+                <td>{{this.lastPerformed}}</td>
+                <td>{{this.nextReminder}}</td>
+            </tr>            
+        {{/each}}
+    </table>
+    </ul>
+{{/site}}
