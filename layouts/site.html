@@ -3,27 +3,21 @@
     <head>
         <meta charset="utf-8">
         <title>{{pageTitle}} | Habit App</title>
-        <link rel="stylesheet" type="text/css" href="/css/unauth.css">
+        <link rel="stylesheet" type="text/css" href="/public/style.css">
         <meta data-rh="true" name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1"/>
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="theme-color" content="#4285f4">
         <meta name="description" content="An app to help you keep track of your habits">
-    </head>
+      </head>
 
     <body>      
         <header class="site-header"> 
               <nav class="site-navigation">
                 <div class="auth">
-                    <a href="/home" class="btn btn--light btn--md logged-in-status">
-                      Dashboard
+                    <a href="/" class="btn btn--light btn--md logged-in-status">
+                      Agents List
                     </a>
-
-                    <a href="{{appUrl}}/login" id="login-from-header" class="btn btn--light btn--md guest-status">
-                      Login
-                    </a>
-                    <a href="/#register" id="register-from-header" class="btn btn--ghost btn--light btn--md guest-status">
-                      Register
-                    </a>
+                    <a href="/add-reminder">Add Reminder</a>
                 </div>
               </nav>
         </header>
@@ -34,6 +28,6 @@
         <div class="basic-footer">
             Built by <a href="https://www.allenmuncy.com" target="_blank">Allen Muncy</a> | <a href="/legal">Privacy & Terms</a>
         </div>         
-        <script src="/js/site.js"></script>
+        <script src="/public/scripts.js"></script>
     </body>
 </html>

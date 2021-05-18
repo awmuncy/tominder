@@ -1,6 +1,6 @@
 {{#> site }}
 
-    <div>{{pageTitle}}</div>
+    
     <table>
         <thead>
             <tr>
@@ -9,15 +9,18 @@
                 <th>Time to next</th>
                 <th>Last Performed</th>
                 <th>Next Reminder</th>
+                <th>Mark complete</th>
             </tr>
         </thead>
         {{#each agents}}
             <tr>
                 <td>{{this.title}}</td>
-                <td>{{this.interval?.days}}</td>
-                <td>{{this.timeToNext}} +- 7 days</td>
+                <td><span class="example">Ex; Every day</span></td>
+                <td><span class="example">{{this.timeToNext}} +- 7 days</span></td>
                 <td>{{this.lastPerformed}}</td>
                 <td>{{this.nextReminder}}</td>
+                <td><form action="/complete"><input type="hidden" name="action" value="{{this.title}}" /><button type="submit">Mark complete</button></form></td>
+                <td><a href="/edit-reminder?id={{this.id}}">Edit reminder</a></td>
             </tr>            
         {{/each}}
     </table>

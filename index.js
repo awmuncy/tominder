@@ -1,56 +1,88 @@
-import agents from './agents/_agents.js';
 import express from 'express';
-var server = express();
-server.listen(3134, () => {console.log("Server")});
-import agentPoller from './agentPoller.mjs';
-import { ListAgents } from './layouts/useHandlebars.js';
+import mongoose from 'mongoose';
+import mongooseDeets from "./config/mongo.json";
+import Reminder from './Reminder.schema.js';
+import { format } from 'date-fns';
+// import newReminder from './newReminder.js';
+import AwarenessAgent from './awarenessAgent.js';
 
-var activeAgents = agents.map(agent => {
+var agents = [];
 
-    agent.activate();
+await mongoose.connect(mongooseDeets.url, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useFindAndModify: false,
+  useCreateIndex: true
+});
+var poller = agentPoller([], 3000);
 
-    return agent;
+Reminder.find({}, function (err, docs) {
+    docs.forEach(doc => {
+
+        var agent = new AwarenessAgent(doc);
+
+        poller.agents.push(agent);
+        agent.activate();
+    })
 });
 
-agentPoller(activeAgents, 3000);
+
+var server = express();
+
+
+
+import bodyParser from 'body-parser';
+
+server.use( bodyParser.json() );       // to support JSON-encoded bodies
+server.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
+
+
+server.listen(3134, () => {console.log("Server")});
+import agentPoller from './agentPoller.mjs';
+import { ListAgents, MarkedComplete, AddReminder } from './layouts/useHandlebars.js';
+
+server.use('/public', express.static('static'));
+
 
 server.get("/complete", (req, res, next) => {
     var action = req.query.action;
 
-    var found = activeAgents.find(element => element.title == action);
+    var found = poller.agents.find(element => element.title == action);
     if(!found) {
         res.send("No action found");
         return;
     }
     found.markComplete();
 
-    res.send(`Agent "${action}" marked complete`);
-});
-
-server.get("/regen", (req, res, next) => {
-    var action = req.query.action;
-
-    var found = activeAgents.find(element => element.title == action);
-    if(!found) {
-        res.send("No action found");
-        return;
-    }
-    found.regenerateNextReminder();
-
-    res.send(`Agent "${action}" marked complete`);
+    res.send(MarkedComplete({title: action}));
 });
 
 
-server.get("/list-agents", (req, res, next) => {
 
-    res.send(ListAgents({pageTitle:"List Agents", agents: activeAgents}));
+server.get("/", (req, res, next) => {
+    var agents = poller.agents.map(agent => {
 
-    // var send = "";
-	// activeAgents.forEach(agent => {
-    //     send += agent.title + "<br><br>";
-    //     send += agent.interval + "<br><br>";
-    // });
+        return {
+            title: agent.title,
+            timeToNext: format(agent.timeToNext, "yyyy"),
+            lastPerformed: format(agent.lastPerformed, "MMMM do, yyyy, h:m aaa"),
+            nextReminder: format(agent.nextReminder, 'MMMM do, yyyy, h:m aaa'),
+            id: agent.id
+        }
+    });
 
-	// res.send(send);
+    res.send(ListAgents({pageTitle:"List Agents", agents}));
+
 });
+
+
+import AddReminderRouter from './lib/AddReminder.js';
+server.use("/", AddReminderRouter);
+
+
+import EditReminderRouter from './lib/EditReminder.js';
+server.use("/", EditReminderRouter);
+
 

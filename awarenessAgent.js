@@ -2,6 +2,7 @@ import fs from 'fs';
 import slugify from 'slugify';
 import _, {format} from 'date-fns';
 import fetch from 'node-fetch';
+import Reminder from './Reminder.schema.js';
 
 const capitalize = (s) => {
     if (typeof s !== 'string') return ''
@@ -44,7 +45,6 @@ class StabilityAgent {
 
     #reminders = []; 
     #onComplete = [];
-    remindersSent = 0;
 
 /**
  *
@@ -56,14 +56,14 @@ class StabilityAgent {
  */
     constructor(props) {
         this.title = props.title || "Stability Agent";
-        this.#id = props.id ?? slugify(props.title);
+        this.#id = props._id;
         this.#version = props.version ?? 0;
-        var stored = this.readStoredState();
+
 
         this.#interval = props.interval;
-        this.#lastPerformed = stored.lastPerformed ?? 0;
-        this.#nextReminder = stored.nextReminder ? new Date(stored.nextReminder) : this.generateNextReminder();
-        this.#remindersSent = stored.remindersSent ?? [];
+        this.#lastPerformed = props.lastPerformed ?? 0;
+        this.#nextReminder = props.nextReminder ? new Date(props.nextReminder) : this.generateNextReminder();
+        this.#remindersSent = props.remindersSent ?? [];
 
         this.#reminders = props.reminders;
         this.#onComplete = props.onComplete;
@@ -72,8 +72,8 @@ class StabilityAgent {
     reflect() {
         if(this.isPastDue()) {
             this.remind();
-        }
-        this.exportCurrentState();
+            this.exportCurrentState();
+        }        
     }
 
 
@@ -100,12 +100,10 @@ class StabilityAgent {
 
         // Give or take
 
-        console.log("Give or take ");
         timeDenoms.forEach(denom => {
             if(!this.#interval?.giveOrTake?.[denom]) return;
             var giveOrTake = Math.floor((Math.random() - .5) * 2 * this.#interval.giveOrTake[denom]);
 
-            console.log(`${giveOrTake} ${denom}` );
             next = _["add" + capitalize(denom)](next, giveOrTake ?? 0);
         });
 
@@ -114,7 +112,7 @@ class StabilityAgent {
         // Mods 
 
         this.#interval.mods?.forEach(mod => {
-            console.log(this.#interval);
+
             try {
 
                 var modArgs = mod.slice(1);
@@ -152,8 +150,11 @@ class StabilityAgent {
                 
                 fetch(reminder.action).then(r => {
                     this.#remindersSent.push(key);
+                    var reminderId = reminder.title ?? key;
+                    console.log(`Reminder ${reminderId} sent`);
                 }).catch(err => {
-                    console.log(err);
+                    //console.log(err);
+                    console.log(`Agent ${this.title} (${this.#id}) contains malformed reminders`);
                 });
             }
         });
@@ -176,6 +177,10 @@ Next Reminder: ${this.#nextReminder}
 
     }
 
+    get id() {
+        return this.#id;
+    }
+
     get interval() {
         return this.#interval;
     }
@@ -183,7 +188,7 @@ Next Reminder: ${this.#nextReminder}
         return this.#lastPerformed;
     }
     get timeToNext() {
-        return "Who knows, lol";
+        return this.#nextReminder;
     }
     get nextReminder() {
         return this.#nextReminder;
@@ -211,43 +216,17 @@ Next Reminder: ${this.#nextReminder}
     }
 
 
-    exportCurrentState(location=null) {
-
-        var state = {
-            lastPerformed: this.#lastPerformed,
-            version: this.#version,
-            remindersSent: this.#remindersSent 
-        };
-
-
-        state.nextReminder = this.#nextReminder.getTime();
-
-        var stateString = JSON.stringify(state);
-        fs.writeFileSync(`./agents/saved/${slugify(this.#id)}.json`, stateString);
-    }
-
-    readStoredState() {
-
-        var path = `./agents/saved/${this.#id}.json`;
-
-        try {
-          if (fs.existsSync(path)) {
-            var obj = fs.readFileSync(path, 'utf8', function (err, data) {
-                if (err) throw err;
-            });
-            var obj = JSON.parse(obj);
-            return obj;
-          } else {
-            console.log(`No previous stored perforance for "${this.title}"`);
-            return {};
-          }
-        } catch(err) {
-            console.log("Error attempting to read file");
-            return {};
-        }  
-
+    async exportCurrentState(location=null) {
         
+        var reminderDoc = await Reminder.findOne({_id: this.#id});
+        if(!reminderDoc) return;
+        reminderDoc.lastPerformed = this.#lastPerformed;
+        reminderDoc.remindersSent = this.#remindersSent;
+        reminderDoc.nextReminder = this.#nextReminder.getTime();
+        reminderDoc.save();
+
     }
+
 
 }
 

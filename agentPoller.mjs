@@ -6,6 +6,7 @@
  * @returns {interval} An interval which can be canceled, I guess.
  */
 function agentPoller(agents, interval) {
+    var agents = agents;
     var poller;
     poller = setInterval(() => {
         
@@ -17,7 +18,10 @@ function agentPoller(agents, interval) {
             agent.reflect();
         });
     }, interval);
-    return poller;
+    return {
+        agents,
+        poller
+    };
 }
 
 export default agentPoller;

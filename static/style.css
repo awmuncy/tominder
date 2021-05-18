@@ -1,0 +1,35 @@
+td {
+    padding: 3px 5px;
+  }
+  td:nth-child(2n) {
+      background-color: #ccc;
+  }
+  body {
+    display: grid;
+    grid-template-rows: min-content 1fr min-content;
+    min-height: 100vh;
+    margin: 0px;
+  }
+
+.site-header {
+    margin-bottom: 20px;
+}
+
+.example {
+    color: white;
+    background-color: #b00b69;
+}
+
+fieldset {
+  margin: 10px 0px;
+}
+fieldset label {
+  display: block;
+}
+fieldset label input {
+  display: block;
+}
+form {
+  max-width: 600px;
+  margin: 0 auto;
+}
