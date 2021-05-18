@@ -64,10 +64,11 @@ server.get("/complete", (req, res, next) => {
 server.get("/", (req, res, next) => {
     var agents = poller.agents.map(agent => {
 
+
         return {
             title: agent.title,
             timeToNext: format(agent.timeToNext, "yyyy"),
-            lastPerformed: format(agent.lastPerformed, "MMMM do, yyyy, h:m aaa"),
+            lastPerformed: format(new Date(agent.lastPerformed), "MMMM do, yyyy, h:m aaa"),
             nextReminder: format(agent.nextReminder, 'MMMM do, yyyy, h:m aaa'),
             id: agent.id
         }

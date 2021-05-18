@@ -127,7 +127,7 @@ class StabilityAgent {
         });
 
         // / Mods
-
+        next = isNaN(next.getTime()) ? new Date() : next;
         return next;
     }
 
