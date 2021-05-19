@@ -85,6 +85,10 @@ class StabilityAgent {
         this.#nextReminder = this.generateNextReminder();
     }
 
+    get status() {
+        return this.#nextReminder > new Date() ? "Completed, waiting" : "Incomplete";
+    }
+
 
 
     generateNextReminder() {
@@ -194,8 +198,9 @@ Next Reminder: ${this.#nextReminder}
         return this.#nextReminder;
     }
 
-    markComplete() {
-        this.#lastPerformed = new Date().getTime();
+    markComplete(completedAt) {
+
+        this.#lastPerformed = completedAt ? new Date(completedAt).getTime() : new Date().getTime();
         console.log("Set latest complete day, shut reminder off, keep checking util...");
         this.#successActions?.forEach(successAction => {
             successAction(this);

@@ -46,15 +46,17 @@ import { ListAgents, MarkedComplete, AddReminder } from './layouts/useHandlebars
 server.use('/public', express.static('static'));
 
 
-server.get("/complete", (req, res, next) => {
-    var action = req.query.action;
+server.post("/complete", (req, res, next) => {
+    var action = req.body.action;
 
     var found = poller.agents.find(element => element.title == action);
     if(!found) {
         res.send("No action found");
         return;
     }
-    found.markComplete();
+    var at = req.body.time ? parseInt(req.body.time) : null;
+
+    found.markComplete(at);
 
     res.send(MarkedComplete({title: action}));
 });
@@ -68,9 +70,10 @@ server.get("/", (req, res, next) => {
         return {
             title: agent.title,
             timeToNext: format(agent.timeToNext, "yyyy"),
-            lastPerformed: format(new Date(agent.lastPerformed), "MMMM do, yyyy, h:m aaa"),
-            nextReminder: format(agent.nextReminder, 'MMMM do, yyyy, h:m aaa'),
-            id: agent.id
+            lastPerformed: format(new Date(agent.lastPerformed), "MMMM do, yyyy, h:mm aaa"),
+            nextReminder: format(agent.nextReminder, 'MMMM do, yyyy, h:mm aaa'),
+            id: agent.id,
+            status: agent.status
         }
     });
 

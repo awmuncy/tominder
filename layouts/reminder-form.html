@@ -1,7 +1,8 @@
 {{#> site }}
 
 <form action="/reminder" method="POST" id="#add-reminder">
-    <input type="text" name="title" value="{{doc.title}}" />
+    <label>Name:<input type="text" name="title" value="{{doc.title}}" /></label>
+    <label>Description: <textarea name="description"></textarea></label>
     
     {{#if id}}
     <input type="hidden" name="id" value="{{id}}"/>
@@ -19,12 +20,12 @@
     </fieldset>
     <fieldset>
         <h2>Give or Take</h2>
-        <label>Seconds:  <input type="number" name="give-or-take-days" value="{{ doc.interval.giveOrTake.seconds }}"></label>
-        <label>Minutes:  <input type="number" name="give-or-take-days" value="{{ doc.interval.giveOrTake.minutes }}"></label>
-        <label>Hours:  <input type="number" name="give-or-take-days" value="{{ doc.interval.giveOrTake.hours }}"></label>
+        <label>Seconds:  <input type="number" name="give-or-take-seconds" value="{{ doc.interval.giveOrTake.seconds }}"></label>
+        <label>Minutes:  <input type="number" name="give-or-take-minutes" value="{{ doc.interval.giveOrTake.minutes }}"></label>
+        <label>Hours:  <input type="number" name="give-or-take-hours" value="{{ doc.interval.giveOrTake.hours }}"></label>
         <label>Days:  <input type="number" name="give-or-take-days" value="{{ doc.interval.giveOrTake.days }}"></label>
-        <label>Weeks:  <input type="number" name="give-or-take-days" value="{{ doc.interval.giveOrTake.weeks }}"></label>
-        <label>Months:  <input type="number" name="give-or-take-days" value="{{ doc.interval.giveOrTake.months }}"></label>
+        <label>Weeks:  <input type="number" name="give-or-take-weeks" value="{{ doc.interval.giveOrTake.weeks }}"></label>
+        <label>Months:  <input type="number" name="give-or-take-months" value="{{ doc.interval.giveOrTake.months }}"></label>
 
     </fieldset>
     <fieldset>
@@ -87,6 +88,20 @@
         <span><em>When the reminder has been marked complete, do this:</em></span>
         {{#if id}} 
 
+            {{#each doc.onComplete}}
+                <fieldset id="completed-list">
+                    <h2>Completion Action</h2>
+                    <label>
+                        Action title: 
+                        <input type="text" value="{{this.title}}" required name="completion-action-title" />
+                    </label>
+                    <label>
+                        Action url: 
+                        <input type="text" required value="{{this.action}}" name="completion-action-url" />
+                    </label>
+                </fieldset>
+            {{/each}}
+
         {{else}}
         <fieldset id="completed-list">
             <h2>Completion Action</h2>
@@ -121,6 +136,20 @@
             <input type="number" name="wait" value="0" />
         </label>
         <button class="remove-this-action">Remove This Action</button>
+    </fieldset>
+</template>
+
+<template id="completion-template">
+    <fieldset id="completed-list">
+        <h2>Completion Action</h2>
+        <label>
+            Action title: 
+            <input type="text" required name="completion-action-title" />
+        </label>
+        <label>
+            Action url: 
+            <input type="text" required name="completion-action-url" />
+        </label>
     </fieldset>
 </template>
 

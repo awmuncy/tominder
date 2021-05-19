@@ -5,21 +5,21 @@
         <thead>
             <tr>
                 <th>Title</th>
-                <th>Interval</th>
-                <th>Time to next</th>
+
                 <th>Last Performed</th>
                 <th>Next Reminder</th>
+                <th>Status</th>
                 <th>Mark complete</th>
             </tr>
         </thead>
         {{#each agents}}
             <tr>
                 <td>{{this.title}}</td>
-                <td><span class="example">Ex; Every day</span></td>
-                <td><span class="example">{{this.timeToNext}} +- 7 days</span></td>
+
                 <td>{{this.lastPerformed}}</td>
                 <td>{{this.nextReminder}}</td>
-                <td><form action="/complete"><input type="hidden" name="action" value="{{this.title}}" /><button type="submit">Mark complete</button></form></td>
+                <td>{{this.status}}</td>
+                <td><form action="/complete" method="POST"><input type="hidden" name="action" value="{{this.title}}" /><button type="submit">Mark complete</button></form></td>
                 <td><a href="/edit-reminder?id={{this.id}}">Edit reminder</a></td>
             </tr>            
         {{/each}}
