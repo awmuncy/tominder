@@ -21,8 +21,10 @@
                 <td>{{this.status}}</td>
                 <td><form action="/complete" method="POST"><input type="hidden" name="action" value="{{this.title}}" /><button type="submit">Mark complete</button></form></td>
                 <td><a href="/edit-reminder?id={{this.id}}">Edit reminder</a></td>
+                <td><form action="/clear-reminders" method="POST"><input type="hidden" name="action" value="{{this.id}}" /><button type="submit">Clear reminders</button></form></td>
             </tr>            
         {{/each}}
     </table>
     </ul>
+    <form action="/clear-reminders" method="POST"><button type="submit">Clear all reminders</button></form>    
 {{/site}}
