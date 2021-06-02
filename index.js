@@ -5,6 +5,7 @@ import Reminder from './Reminder.schema.js';
 import { format } from 'date-fns';
 // import newReminder from './newReminder.js';
 import AwarenessAgent from './awarenessAgent.js';
+import cron from 'node-cron';
 
 var agents = [];
 
@@ -14,28 +15,22 @@ await mongoose.connect(mongooseDeets.url, {
   useFindAndModify: false,
   useCreateIndex: true
 });
-var poller = agentPoller([], 3000);
 
-
-setInterval(() => {
-    poller.agents = [];
+function refreshAgents() {
     Reminder.find({}, function (err, docs) {
         docs.forEach(doc => {
     
             var agent = new AwarenessAgent(doc);
     
-            poller.agents.push(agent);
             agent.reflect();
-            agent.activate();
         })
     });
-}, 3000);
+}
 
-
+cron.schedule('*/5 * * * *', refreshAgents);
 
 var server = express();
 
-export { poller }; 
 
 import bodyParser from 'body-parser';
 
@@ -46,7 +41,7 @@ server.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 
 
 server.listen(3134, () => {console.log("Server")});
-import agentPoller from './agentPoller.mjs';
+
 import { ListAgents, MarkedComplete, AddReminder } from './layouts/useHandlebars.js';
 
 server.use('/public', express.static('static'));
@@ -72,17 +67,19 @@ server.post('/clear-reminders', async (req, res, next) => {
 
     }
 
-
+    refreshAgents();
     
 
     res.send("Okay");
 
 });
 
-server.post("/complete", (req, res, next) => {
+server.post("/complete", async (req, res, next) => {
     var action = req.body.action;
 
-    var found = poller.agents.find(element => element.title == action);
+
+    var found = await Reminder.findOne({title:action}); 
+
     if(!found) {
         res.send("No action found");
         return;
@@ -96,8 +93,15 @@ server.post("/complete", (req, res, next) => {
 
 
 
-server.get("/", (req, res, next) => {
-    var agents = poller.agents.map(agent => {
+server.get("/", async (req, res, next) => {
+
+    var docs = await Reminder.find({}, () => {
+        
+    });
+
+    var agents = docs.map(agent => {
+
+        agent = new AwarenessAgent(agent);
 
 
         return {
