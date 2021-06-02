@@ -16,20 +16,26 @@ await mongoose.connect(mongooseDeets.url, {
 });
 var poller = agentPoller([], 3000);
 
-Reminder.find({}, function (err, docs) {
-    docs.forEach(doc => {
 
-        var agent = new AwarenessAgent(doc);
+setInterval(() => {
+    poller.agents = [];
+    Reminder.find({}, function (err, docs) {
+        docs.forEach(doc => {
+    
+            var agent = new AwarenessAgent(doc);
+    
+            poller.agents.push(agent);
+            agent.reflect();
+            agent.activate();
+        })
+    });
+}, 3000);
 
-        poller.agents.push(agent);
-        agent.activate();
-    })
-});
 
 
 var server = express();
 
-
+export { poller }; 
 
 import bodyParser from 'body-parser';
 
@@ -45,6 +51,33 @@ import { ListAgents, MarkedComplete, AddReminder } from './layouts/useHandlebars
 
 server.use('/public', express.static('static'));
 
+server.post('/clear-reminders', async (req, res, next) => {
+
+    if(req.body.action) {
+        var doc = await Reminder.findOne({_id: req.body.action});
+        if(doc===null) {
+            res.send("Reminder not found");
+            return;
+        }
+    
+        doc.remindersSent = [];
+        doc.save();
+    } else {
+        Reminder.find({}, (err, docs) => {
+            docs.forEach(doc => {
+                doc.remindersSent = [];
+                doc.save();
+            });
+        });
+
+    }
+
+
+    
+
+    res.send("Okay");
+
+});
 
 server.post("/complete", (req, res, next) => {
     var action = req.body.action;
