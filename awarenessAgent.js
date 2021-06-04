@@ -3,6 +3,12 @@ import slugify from 'slugify';
 import _, {format} from 'date-fns';
 import fetch from 'node-fetch';
 import Reminder from './Reminder.schema.js';
+import parser from 'cron-parser';
+
+
+// const cronExpression = "*/30 * * * *";
+// const interval = parser.parseExpression(cronExpression);
+// console.log('Next run:', interval.prev().getTime());
 
 const capitalize = (s) => {
     if (typeof s !== 'string') return ''
@@ -22,7 +28,10 @@ function addInterval(intervalObj={}, date=new Date()) {
     return next;
 }
 
-
+function random(seed) {
+    var x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+}
 
 
 /**
@@ -37,11 +46,10 @@ class StabilityAgent {
     title;
     #id;
     #interval;
+    #reminderSchedule;
     #lastPerformed;
-    #nextReminder;
     #successActions;
     #remindersSent = [];
-    #version;
 
     #reminders = []; 
     #onComplete = [];
@@ -57,13 +65,13 @@ class StabilityAgent {
     constructor(props) {
         this.title = props.title || "Stability Agent";
         this.#id = props._id;
-        this.#version = props.version ?? 0;
 
-
+        this.#reminderSchedule = props.reminderSchedule;
         this.#interval = props.interval;
         this.#lastPerformed = props.lastPerformed ?? 0;
-        this.#nextReminder = props.nextReminder ? new Date(props.nextReminder) : this.generateNextReminder();
         this.#remindersSent = props.remindersSent ?? [];
+
+
 
         this.#reminders = props.reminders;
         this.#onComplete = props.onComplete;
@@ -78,20 +86,20 @@ class StabilityAgent {
 
 
     get nextReminder() {
-        return this.#nextReminder ?? this.generateNextReminder();
+        return this.generateNextReminder();
     }
 
-    regenerateNextReminder() {
-        this.#nextReminder = this.generateNextReminder();
-    }
 
     get status() {
-        return this.#nextReminder > new Date() ? "Completed, waiting" : "Incomplete";
+        return this.nextReminder > new Date() ? "Completed, waiting" : "Incomplete";
     }
 
 
 
     generateNextReminder() {
+
+
+
         var current = new Date(this.#lastPerformed);
 
         var timeDenoms = ["seconds", "minutes", "hours", "days", "weeks", "months"];
@@ -103,11 +111,11 @@ class StabilityAgent {
         });
 
         // Give or take
-
+        var i = 1;
         timeDenoms.forEach(denom => {
             if(!this.#interval?.giveOrTake?.[denom]) return;
-            var giveOrTake = Math.floor((Math.random() - .5) * 2 * this.#interval.giveOrTake[denom]);
-
+            var giveOrTake = Math.floor((random(current.getTime() + i) - .5) * 2 * this.#interval.giveOrTake[denom]);
+            i++;
             next = _["add" + capitalize(denom)](next, giveOrTake ?? 0);
         });
 
@@ -137,8 +145,21 @@ class StabilityAgent {
 
 
     isPastDue() {
-        var isPastDue = (new Date().getTime() > this.#nextReminder.getTime());
-        return isPastDue;
+        
+        if(this.#reminderSchedule) {
+
+            var latestSlot = parser.parseExpression(this.#reminderSchedule).prev().getTime();
+
+            var lastPerformedTooOld = (new Date(this.#lastPerformed) < latestSlot);
+            var latestSlotAfterDue = (latestSlot > this.nextReminder );
+
+            return (lastPerformedTooOld && latestSlotAfterDue);
+        } else {
+            this.nextReminder.getTime();
+            var isPastDue = (new Date().getTime() > this.nextReminder.getTime());
+            return isPastDue;
+        }
+
 
     }
 
@@ -150,7 +171,7 @@ class StabilityAgent {
         this.#reminders.forEach((reminder, key) => {
             var keyAlreadyFired = this.#remindersSent.includes(key);
             if(keyAlreadyFired) return;
-            if(addInterval(reminder.wait ?? {}, this.#nextReminder.getTime()) < new Date().getTime()) {
+            if(addInterval(reminder.wait ?? {}, this.nextReminder.getTime()) < new Date().getTime()) {
                 
                 fetch(reminder.action).then(r => {
                     this.#remindersSent.push(key);
@@ -175,7 +196,7 @@ class StabilityAgent {
         console.log("\x1b[1m", `
 ${this.title}`, "\x1b[0m", `activited
 Last performed: ${format(new Date(this.#lastPerformed ?? 0), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx")}
-Next Reminder: ${this.#nextReminder}
+Next Reminder: ${this.nextReminder}
 `);
 
 
@@ -191,12 +212,7 @@ Next Reminder: ${this.#nextReminder}
     get lastPerformed() {
         return this.#lastPerformed;
     }
-    get timeToNext() {
-        return this.#nextReminder;
-    }
-    get nextReminder() {
-        return this.#nextReminder;
-    }
+
 
     markComplete(completedAt) {
 
@@ -205,7 +221,6 @@ Next Reminder: ${this.#nextReminder}
         this.#successActions?.forEach(successAction => {
             successAction(this);
         });
-        this.#nextReminder = this.generateNextReminder();
         this.#remindersSent = [];
         this.#onComplete.forEach(complete => {
             fetch(complete.action).then(r => {
@@ -227,7 +242,6 @@ Next Reminder: ${this.#nextReminder}
         if(!reminderDoc) return;
         reminderDoc.lastPerformed = this.#lastPerformed;
         reminderDoc.remindersSent = this.#remindersSent;
-        reminderDoc.nextReminder = this.#nextReminder.getTime();
         reminderDoc.save();
 
     }

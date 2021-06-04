@@ -27,7 +27,12 @@ function refreshAgents() {
     });
 }
 
-cron.schedule('*/5 * * * *', refreshAgents);
+var myCronJob = cron.schedule('*/5 * * * *', refreshAgents);
+
+
+
+
+
 
 var server = express();
 
@@ -106,7 +111,6 @@ server.get("/", async (req, res, next) => {
 
         return {
             title: agent.title,
-            timeToNext: format(agent.timeToNext, "yyyy"),
             lastPerformed: format(new Date(agent.lastPerformed), "MMMM do, yyyy, h:mm aaa"),
             nextReminder: format(agent.nextReminder, 'MMMM do, yyyy, h:mm aaa'),
             id: agent.id,

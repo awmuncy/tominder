@@ -1,15 +1,15 @@
 import mongoose from 'mongoose';
 
 const Reminder = new mongoose.Schema({
-    title: { type: String, default: 'Some Title'},
+    title: { type: String },
+    cron: { type: String },
+    reminderTimes: { type: String },
     id: { type: String },
-    version: { type: Number, default: 0},
     interval: { type: Object },
     reminders: { type: Array },
     onComplete: { type: Array },
     lastPerformed: { type: Number },
-    remindersSent: { type: Array },
-    nextReminder: { type: Number }
+    remindersSent: { type: Array }
 });
 
 const ReminderModel = mongoose.model('Reminder', Reminder);
