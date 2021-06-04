@@ -18,6 +18,7 @@ await mongoose.connect(mongooseDeets.url, {
 
 function refreshAgents() {
     Reminder.find({}, function (err, docs) {
+        if(!Array.isArray(docs)) return;
         docs.forEach(doc => {
     
             var agent = new AwarenessAgent(doc);
@@ -37,7 +38,7 @@ import bodyParser from 'body-parser';
 server.use( bodyParser.json() );       // to support JSON-encoded bodies
 server.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
-})); 
+}));
 
 
 server.listen(3134, () => {console.log("Server")});
@@ -54,14 +55,14 @@ server.post('/clear-reminders', async (req, res, next) => {
             res.send("Reminder not found");
             return;
         }
-    
+  
         doc.remindersSent = [];
-        doc.save();
+        await doc.save();
     } else {
-        Reminder.find({}, (err, docs) => {
-            docs.forEach(doc => {
+        await Reminder.find({}, (err, docs) => {
+            docs.forEach(async doc => {
                 doc.remindersSent = [];
-                doc.save();
+                var result = await doc.save();
             });
         });
 
@@ -73,7 +74,7 @@ server.post('/clear-reminders', async (req, res, next) => {
     res.send("Okay");
 
 });
-
+refreshAgents();
 server.post("/complete", async (req, res, next) => {
     var action = req.body.action;
 
@@ -86,6 +87,8 @@ server.post("/complete", async (req, res, next) => {
     }
     var at = req.body.time ? parseInt(req.body.time) : null;
 
+    found = new AwarenessAgent(found);
+    
     found.markComplete(at);
 
     res.send(MarkedComplete({title: action}));
