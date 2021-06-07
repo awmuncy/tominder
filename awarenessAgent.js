@@ -1,23 +1,15 @@
-import fs from 'fs';
-import slugify from 'slugify';
-import _, {format} from 'date-fns';
+import _ from 'date-fns';
 import fetch from 'node-fetch';
 import Reminder from './Reminder.schema.js';
 import parser from 'cron-parser';
-
-
-// const cronExpression = "*/30 * * * *";
-// const interval = parser.parseExpression(cronExpression);
-// console.log('Next run:', interval.prev().getTime());
+var timeDenoms = ["seconds", "minutes", "hours", "days", "weeks", "months"];
 
 const capitalize = (s) => {
     if (typeof s !== 'string') return ''
     return s.charAt(0).toUpperCase() + s.slice(1)
 };
 
-
 function addInterval(intervalObj={}, date=new Date()) {
-    var timeDenoms = ["seconds", "minutes", "hours", "days", "weeks", "months"];
 
     var next = date;
     timeDenoms.forEach(denom => {
@@ -43,205 +35,163 @@ function random(seed) {
  */
 class StabilityAgent {
 
-    title;
-    #id;
-    #interval;
-    #reminderSchedule;
-    #lastPerformed;
-    #successActions;
-    #remindersSent = [];
+    #record;
 
-    #reminders = []; 
-    #onComplete = [];
+    constructor(agent) {
+        this.#record = agent;
+    }
 
-/**
- *
- * @param {Object} props Description
- * @param {String} props.title Description
- * @param {Number} props.interval Description
- * @param {Number} [props.lastPerformed] Last time you did this 
- * @param {Callback} [props.reminderActions] Actions
- */
-    constructor(props) {
-        this.title = props.title || "Stability Agent";
-        this.#id = props._id;
+    get interval() {
+        this.#record.interval;
+    }
 
-        this.#reminderSchedule = props.reminderSchedule;
-        this.#interval = props.interval;
-        this.#lastPerformed = props.lastPerformed ?? 0;
-        this.#remindersSent = props.remindersSent ?? [];
+    get reminderSchedule() {
+        return this.#record.reminderSchedule;
+    }
 
+    get title() {
+        return this.#record.title;
+    }
 
+    get id() {
+        return this.#record._id;
+    }
 
-        this.#reminders = props.reminders;
-        this.#onComplete = props.onComplete;
+    get interval() {
+        return this.#record.interval;
+    }
+
+    get lastPerformed() {
+        return this.#record.lastPerformed ?? 0;
+    }
+
+    get onComplete() {
+        return this.#record.onComplete;
+    }
+
+    get successActions() {
+        return this.#record.successActions;
+    }
+
+    get nextReminder() {
+        return this.#generateNextReminder();
+    }
+
+    get remindersSent() {
+        return this.#record.remindersSent;
+    }
+
+    get reminders() {
+        return this.#record.reminders;
+    }
+
+    get status() {
+        return this.nextReminder > new Date() ? "Completed" : "Incomplete";
     }
 
     reflect() {
-        if(this.isPastDue()) {
+        if(this.isPastDue) {
             this.remind();
-            this.exportCurrentState();
+            this.save();
         }        
     }
 
-
-    get nextReminder() {
-        return this.generateNextReminder();
-    }
-
-
-    get status() {
-        return this.nextReminder > new Date() ? "Completed, waiting" : "Incomplete";
-    }
+    /**
+     * @returns {Number} Interger to add to miliseconds
+     */
+    #addDefaultInterval(previousDate) {
+        var next = previousDate;
 
 
-
-    generateNextReminder() {
-
-
-
-        var current = new Date(this.#lastPerformed);
-
-        var timeDenoms = ["seconds", "minutes", "hours", "days", "weeks", "months"];
-
-        var next = current;
         timeDenoms.forEach(denom => {
 
-            next = _["add" + capitalize(denom)](next, this.#interval[denom] ?? 0);
+            next = _["add" + capitalize(denom)](next, this.interval[denom] ?? 0);
         });
 
-        // Give or take
-        var i = 1;
-        timeDenoms.forEach(denom => {
-            if(!this.#interval?.giveOrTake?.[denom]) return;
-            var giveOrTake = Math.floor((random(current.getTime() + i) - .5) * 2 * this.#interval.giveOrTake[denom]);
-            i++;
-            next = _["add" + capitalize(denom)](next, giveOrTake ?? 0);
-        });
-
-        //  / Give or take
-
-        // Mods 
-
-        this.#interval.mods?.forEach(mod => {
-
-            try {
-
-                var modArgs = mod.slice(1);
-
-                next = _[mod[0]](next, ...modArgs);
-
-            } catch (e) {
-                console.log(e);
-            }
-
-
-        });
-
-        // / Mods
-        next = isNaN(next.getTime()) ? new Date() : next;
         return next;
     }
 
-
-    isPastDue() {
-        
-        if(this.#reminderSchedule) {
-
-            var latestSlot = parser.parseExpression(this.#reminderSchedule).prev().getTime();
-
-            var lastPerformedTooOld = (new Date(this.#lastPerformed) < latestSlot);
-            var latestSlotAfterDue = (latestSlot > this.nextReminder );
-
-            return (lastPerformedTooOld && latestSlotAfterDue);
-        } else {
-            this.nextReminder.getTime();
-            var isPastDue = (new Date().getTime() > this.nextReminder.getTime());
-            return isPastDue;
-        }
-
-
+    #giveOrTake(previousDate) {
+        var next = previousDate;
+        var i = 1;
+        timeDenoms.forEach(denom => {
+            if(!this.interval?.giveOrTake?.[denom]) return;
+            var giveOrTake = Math.floor((random(this.lastPerformed + i) - .5) * 2 * this.interval.giveOrTake[denom]);
+            i++;
+            next = _["add" + capitalize(denom)](next, giveOrTake ?? 0);
+        });
+        return next;
     }
 
+    #findScheduledTime(previousDate) {
 
+        if(!this.#record.cron) return previousDate;
 
+        return parser.parseExpression(this.#record.cron, {currentDate: previousDate, iterator: true}).next().value._date.toJSDate();
+    }
+
+    #generateNextReminder() {
+
+        var nextDate = new Date(this.lastPerformed);
+
+        nextDate = this.#addDefaultInterval(nextDate);
+        nextDate = this.#giveOrTake(nextDate);
+        nextDate = this.#findScheduledTime(nextDate);
+
+        return nextDate;
+    }
+
+    get isPastDue() {
+        return (new Date() > this.nextReminder);
+    }
 
     remind() {
         
-        this.#reminders.forEach((reminder, key) => {
-            var keyAlreadyFired = this.#remindersSent.includes(key);
+        this.reminders.forEach((reminder, key) => {
+            var keyAlreadyFired = this.remindersSent.includes(key);
             if(keyAlreadyFired) return;
             if(addInterval(reminder.wait ?? {}, this.nextReminder.getTime()) < new Date().getTime()) {
                 
                 fetch(reminder.action).then(r => {
-                    this.#remindersSent.push(key);
+                    this.#record.remindersSent.push(key);
                     var reminderId = reminder.title ?? key;
                     console.log(`Reminder ${reminderId} sent`);
                 }).catch(err => {
                     //console.log(err);
-                    console.log(`Agent ${this.title} (${this.#id}) contains malformed reminders`);
+                    console.log(`Agent ${this.title} (${this.id}) contains malformed reminders`);
                 });
             }
         });
 
     }
-    
-    resendLastReminder() {
-        remind(false);
-    }
-
-
-    activate() {
-  
-        console.log("\x1b[1m", `
-${this.title}`, "\x1b[0m", `activited
-Last performed: ${format(new Date(this.#lastPerformed ?? 0), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx")}
-Next Reminder: ${this.nextReminder}
-`);
-
-
-    }
-
-    get id() {
-        return this.#id;
-    }
-
-    get interval() {
-        return this.#interval;
-    }
-    get lastPerformed() {
-        return this.#lastPerformed;
-    }
-
 
     markComplete(completedAt) {
 
-        this.#lastPerformed = completedAt ? new Date(completedAt).getTime() : new Date().getTime();
+        this.lastPerformed = completedAt ? new Date(completedAt).getTime() : new Date().getTime();
         console.log("Set latest complete day, shut reminder off, keep checking util...");
-        this.#successActions?.forEach(successAction => {
+        this.successActions?.forEach(successAction => {
             successAction(this);
         });
-        this.#remindersSent = [];
-        this.#onComplete.forEach(complete => {
+        this.#record.remindersSent = [];
+        this.onComplete.forEach(complete => {
             fetch(complete.action).then(r => {
-
+                
             }).catch(err=>{
                 console.log("Oof");
                 console.log(err);
             })
         })
-        this.exportCurrentState() // Saves data;
-        this.activate();
+        this.save();
 
     }
 
 
-    async exportCurrentState(location=null) {
+    async save() {
         
-        var reminderDoc = await Reminder.findOne({_id: this.#id});
-        if(!reminderDoc) return;
-        reminderDoc.lastPerformed = this.#lastPerformed;
-        reminderDoc.remindersSent = this.#remindersSent;
+        var reminderDoc = await Reminder.findOne({_id: this.id});
+        if(!reminderDoc) throw(new Error("No document.")); 
+        reminderDoc.lastPerformed = this.#record.lastPerformed;
+        reminderDoc.remindersSent = this.#record.remindersSent;
         reminderDoc.save();
 
     }

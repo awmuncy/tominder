@@ -4,6 +4,10 @@ td {
   td:nth-child(2n) {
       background-color: #ccc;
   }
+  td.Incomplete {
+    background-color: #444;
+    color: white;
+  }
   body {
     display: grid;
     grid-template-rows: min-content 1fr min-content;

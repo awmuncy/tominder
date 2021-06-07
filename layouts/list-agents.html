@@ -5,20 +5,20 @@
         <thead>
             <tr>
                 <th>Title</th>
-
-                <th>Last Performed</th>
-                <th>Next Reminder</th>
                 <th>Status</th>
+                <th>Next Reminder</th>
+                <th>Last Performed</th>
                 <th>Mark complete</th>
+                <th>Edit Reminder</th>
+                <th>Clear reminders</th>
             </tr>
         </thead>
         {{#each agents}}
             <tr>
                 <td>{{this.title}}</td>
-
-                <td>{{this.lastPerformed}}</td>
+                <td class="{{this.status}}">{{this.status}}</td>
                 <td>{{this.nextReminder}}</td>
-                <td>{{this.status}}</td>
+                <td>{{this.lastPerformed}}</td>
                 <td><form action="/complete" method="POST"><input type="hidden" name="action" value="{{this.title}}" /><button type="submit">Mark complete</button></form></td>
                 <td><a href="/edit-reminder?id={{this.id}}">Edit reminder</a></td>
                 <td><form action="/clear-reminders" method="POST"><input type="hidden" name="action" value="{{this.id}}" /><button type="submit">Clear reminders</button></form></td>

@@ -111,13 +111,16 @@ server.get("/", async (req, res, next) => {
 
         agent = new AwarenessAgent(agent);
 
+        var due = agent.isPastDue;
 
         return {
             title: agent.title,
             lastPerformed: format(new Date(agent.lastPerformed), "MMMM do, yyyy, h:mm aaa"),
-            nextReminder: format(agent.nextReminder, 'MMMM do, yyyy, h:mm aaa'),
+            nextReminder: due ? "" :  format(agent.nextReminder, 'MMMM do, yyyy, h:mm aaa'),
+            remindedAt: due ?  format(agent.nextReminder, 'MMMM do, yyyy, h:mm aaa') : "",
             id: agent.id,
-            status: agent.status
+            status: agent.status,
+            
         }
     });
 
