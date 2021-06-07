@@ -17,7 +17,7 @@
             <tr>
                 <td>{{this.title}}</td>
                 <td class="{{this.status}}">{{this.status}}</td>
-                <td>{{this.nextReminder}}</td>
+                <td title="{{this.nextReminder}}">{{this.timeUntilNextReminder}}</td>
                 <td>{{this.lastPerformed}}</td>
                 <td><form action="/complete" method="POST"><input type="hidden" name="action" value="{{this.title}}" /><button type="submit">Mark complete</button></form></td>
                 <td><a href="/edit-reminder?id={{this.id}}">Edit reminder</a></td>

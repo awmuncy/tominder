@@ -175,7 +175,7 @@ class StabilityAgent {
         this.#record.remindersSent = [];
         this.onComplete.forEach(complete => {
             fetch(complete.action).then(r => {
-                console.log(`Completed ${this.title}, ${complete.title} sent`);
+                console.log(`"${this.title}" marked complete, ${complete.title} sent`);
             }).catch(err=>{
                 console.log("Oof");
                 console.log(err);

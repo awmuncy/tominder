@@ -1,4 +1,5 @@
 import express from 'express';
+import _ from 'date-fns';
 import mongoose from 'mongoose';
 import mongooseDeets from "./config/mongo.json";
 import Reminder from './Reminder.schema.js';
@@ -117,7 +118,7 @@ server.get("/", async (req, res, next) => {
             title: agent.title,
             lastPerformed: format(new Date(agent.lastPerformed), "MMMM do, yyyy, h:mm aaa"),
             nextReminder: due ? "" :  format(agent.nextReminder, 'MMMM do, yyyy, h:mm aaa'),
-            remindedAt: due ?  format(agent.nextReminder, 'MMMM do, yyyy, h:mm aaa') : "",
+            timeUntilNextReminder: due ? "" : _.formatDistance(new Date(), agent.nextReminder),
             id: agent.id,
             status: agent.status,
             
