@@ -167,7 +167,7 @@ class StabilityAgent {
 
     markComplete(completedAt) {
 
-        this.lastPerformed = completedAt ? new Date(completedAt).getTime() : new Date().getTime();
+        this.#record.lastPerformed = completedAt ? new Date(completedAt).getTime() : new Date().getTime();
         console.log("Set latest complete day, shut reminder off, keep checking util...");
         this.successActions?.forEach(successAction => {
             successAction(this);
@@ -175,7 +175,7 @@ class StabilityAgent {
         this.#record.remindersSent = [];
         this.onComplete.forEach(complete => {
             fetch(complete.action).then(r => {
-                
+                console.log(`Completed ${this.title}, ${complete.title} sent`);
             }).catch(err=>{
                 console.log("Oof");
                 console.log(err);
