@@ -8,6 +8,23 @@ td {
     background-color: #444;
     color: white;
   }
+  td.title {
+    display: flex;
+    justify-content: space-between;
+  }
+  td.title a {
+    display: inline-block;
+    padding-left: 10px;
+    color: white;
+    background-color: darkcyan;
+    font-weight: 900;
+    padding: 5px;
+    border-radius: 3px;
+    text-decoration: none;
+  }
+  td.title a:hover {
+    text-decoration: underline;
+  }
   body {
     display: grid;
     grid-template-rows: min-content 1fr min-content;
@@ -36,4 +53,8 @@ fieldset label input {
 form {
   max-width: 600px;
   margin: 0 auto;
+}
+
+.reminder-card {
+  display: flex;
 }

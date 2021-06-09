@@ -46,8 +46,8 @@ server.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 }));
 
-
-server.listen(3134, () => {console.log("Server")});
+var port = 3134;
+server.listen(port, () => {console.log(`Server started on port ${port}`)});
 
 import { ListAgents, MarkedComplete, AddReminder } from './layouts/useHandlebars.js';
 

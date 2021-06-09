@@ -1,4 +1,7 @@
 {{#> site }}
+{{#if id}}
+<form action="/clear-reminders" method="POST"><input type="hidden" name="action" value="{{id}}" /><button type="submit">Clear reminders</button></form>
+{{/if}}
 
 <form action="/reminder" method="POST" id="#add-reminder">
     <label>Name:<input type="text" name="title" value="{{doc.title}}" /></label>
@@ -31,12 +34,7 @@
 
     <fieldset>
         <h2>Pin to time</h2>
-        <label>Seconds:  <input type="number" name="give-or-take-seconds" value="{{ doc.interval.giveOrTake.seconds }}"></label>
-        <label>Minutes:  <input type="number" name="give-or-take-minutes" value="{{ doc.interval.giveOrTake.minutes }}"></label>
-        <label>Hours:  <input type="number" name="give-or-take-hours" value="{{ doc.interval.giveOrTake.hours }}"></label>
-        <label>Days:  <input type="number" name="give-or-take-days" value="{{ doc.interval.giveOrTake.days }}"></label>
-        <label>Weeks:  <input type="number" name="give-or-take-weeks" value="{{ doc.interval.giveOrTake.weeks }}"></label>
-        <label>Months:  <input type="number" name="give-or-take-months" value="{{ doc.interval.giveOrTake.months }}"></label>
+        <label>Cron:  <input type="text" name="cron" value="{{ doc.cron }}"></label>
 
     </fieldset>
 
