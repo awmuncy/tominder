@@ -115,6 +115,7 @@ server.get("/", async (req, res, next) => {
         var due = agent.isPastDue;
 
         return {
+            nextReminderInt: agent.nextReminder.getTime(),
             title: agent.title,
             lastPerformed: format(new Date(agent.lastPerformed), "MMMM do, yyyy, h:mm aaa"),
             nextReminder: due ? "" :  format(agent.nextReminder, 'MMMM do, yyyy, h:mm aaa'),
@@ -123,6 +124,10 @@ server.get("/", async (req, res, next) => {
             status: agent.status,
             
         }
+    });
+
+    agents.sort((a, b) => {
+        return a.nextReminderInt > b.nextReminderInt ? 1 : -1;
     });
 
     res.send(ListAgents({pageTitle:"List Agents", agents}));
