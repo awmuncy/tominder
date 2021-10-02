@@ -96,7 +96,7 @@ class StabilityAgent {
     async reflect() {
         if(this.isPastDue && !this.asleep) {
             this.remind();
-            return this.save();
+            return await this.save();
         }        
         return;
     }
@@ -193,7 +193,7 @@ class StabilityAgent {
         console.log("Reactivating");
         this.#record.asleep = false;
         await this.reflect();
-        await this.save();
+
     }
 
     async deactivate() {
@@ -208,7 +208,7 @@ class StabilityAgent {
                 console.log(err);
             })
         })
-        return this.save();
+        return await this.save();
     }
 
 
@@ -219,7 +219,9 @@ class StabilityAgent {
         reminderDoc.lastPerformed = this.#record.lastPerformed;
         reminderDoc.remindersSent = this.#record.remindersSent;
         reminderDoc.asleep = this.asleep;
-        reminderDoc.update();
+        
+        return reminderDoc.save().then(() => console.log("Save"), (err) => {console.log("Wtf")});
+       
 
     }
 
