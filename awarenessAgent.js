@@ -219,7 +219,7 @@ class StabilityAgent {
         reminderDoc.lastPerformed = this.#record.lastPerformed;
         reminderDoc.remindersSent = this.#record.remindersSent;
         reminderDoc.asleep = this.asleep;
-        reminderDoc.save();
+        reminderDoc.update();
 
     }
 
