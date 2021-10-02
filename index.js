@@ -53,6 +53,13 @@ import { ListAgents, MarkedComplete, AddReminder } from './layouts/useHandlebars
 
 server.use('/public', express.static('static'));
 
+server.post('/sleep', async (req, res, next) => {
+    if(req.body.action) {
+        var doc = await Reminder.findOne({_id: req.body.action});
+        //
+    }
+});
+
 server.post('/clear-reminders', async (req, res, next) => {
 
     if(req.body.action) {
@@ -108,9 +115,9 @@ server.get("/", async (req, res, next) => {
         
     });
 
-    var agents = docs.map(agent => {
+    var agents = docs.map(agentModel => {
 
-        agent = new AwarenessAgent(agent);
+        let agent = new AwarenessAgent(agentModel);
 
         var due = agent.isPastDue;
 
@@ -122,6 +129,7 @@ server.get("/", async (req, res, next) => {
             timeUntilNextReminder: due ? "" : _.formatDistance(new Date(), agent.nextReminder),
             id: agent.id,
             status: agent.status,
+            asleep: agent.asleep || false
             
         }
     });
@@ -129,6 +137,11 @@ server.get("/", async (req, res, next) => {
     agents.sort((a, b) => {
         return a.nextReminderInt > b.nextReminderInt ? 1 : -1;
     });
+    
+    agents.sort((a, b) => {
+        return Number(a.asleep) - Number(b.asleep);
+    });
+
 
     res.send(ListAgents({pageTitle:"List Agents", agents}));
 

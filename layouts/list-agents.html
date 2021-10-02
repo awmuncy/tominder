@@ -10,7 +10,7 @@
             </tr>
         </thead>
         {{#each agents}}
-            <tr>
+            <tr class="asleep-{{asleep}}">
                 <td class="title">{{this.title}} <a href="/edit-reminder?id={{this.id}}">&#x270E;</a></td>
                 <td class="{{this.status}}">{{this.status}}</td>
                 <td title="{{this.nextReminder}}">{{this.timeUntilNextReminder}}</td>

@@ -22,6 +22,11 @@ td {
     border-radius: 3px;
     text-decoration: none;
   }
+
+  tr.asleep-true {
+    opacity: .4;
+  }
+  
   td.title a:hover {
     text-decoration: underline;
   }

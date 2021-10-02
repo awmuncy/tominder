@@ -41,6 +41,10 @@ class StabilityAgent {
         this.#record = agent;
     }
 
+    get asleep() {
+        return this.#record.asleep;
+    }
+
     get interval() {
         this.#record.interval;
     }
@@ -151,7 +155,6 @@ class StabilityAgent {
             var keyAlreadyFired = this.remindersSent.includes(key);
             if(keyAlreadyFired) return;
             if(addInterval(reminder.wait ?? {}, this.nextReminder.getTime()) < new Date().getTime()) {
-                
                 fetch(reminder.action).then(r => {
                     this.#record.remindersSent.push(key);
                     var reminderId = reminder.title ?? key;
