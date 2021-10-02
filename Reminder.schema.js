@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const Reminder = new mongoose.Schema({
     title: { type: String },
+    description: { type: String },
     cron: { type: String },
     reminderTimes: { type: String },
     id: { type: String },
@@ -9,7 +10,8 @@ const Reminder = new mongoose.Schema({
     reminders: { type: Array },
     onComplete: { type: Array },
     lastPerformed: { type: Number },
-    remindersSent: { type: Array }
+    remindersSent: { type: Array },
+    asleep: { type: Boolean }
 });
 
 const ReminderModel = mongoose.model('Reminder', Reminder);
