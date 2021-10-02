@@ -3,12 +3,13 @@
 <form action="/clear-reminders" method="POST"><input type="hidden" name="action" value="{{id}}" /><button type="submit">Clear reminders</button></form>
 {{/if}}
 
-<form action="/sleep">
-    {{#if doc.asleep}}
-        <button>Button</button>
-    {{else}}
+<form action="/sleep" method="POST">
 
-    {{/if}}
+    {{#if id}}
+    <input type="hidden" name="id" value="{{id}}"/>
+    {{/if}}  
+    <button>{{#if doc.asleep}}Wake{{else}}Sleep{{/if}}</button>
+
 </form>
 
 <form action="/reminder" method="POST" id="#add-reminder">

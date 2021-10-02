@@ -93,11 +93,12 @@ class StabilityAgent {
         return this.nextReminder > new Date() ? "Completed" : "Incomplete";
     }
 
-    reflect() {
-        if(this.isPastDue) {
+    async reflect() {
+        if(this.isPastDue && !this.asleep) {
             this.remind();
-            this.save();
+            return this.save();
         }        
+        return;
     }
 
     /**
@@ -188,6 +189,28 @@ class StabilityAgent {
 
     }
 
+    async reactivate() {
+        console.log("Reactivating");
+        this.#record.asleep = false;
+        await this.reflect();
+        await this.save();
+    }
+
+    async deactivate() {
+        console.log("Deactivating");
+        this.#record.remindersSent = [];
+        this.#record.asleep = true;
+        this.onComplete.forEach(complete => {
+            fetch(complete.action).then(r => {
+                console.log(`"${this.title}" set to sleep, ${complete.title} sent`);
+            }).catch(err=>{
+                console.log("Oof");
+                console.log(err);
+            })
+        })
+        return this.save();
+    }
+
 
     async save() {
         
@@ -195,6 +218,7 @@ class StabilityAgent {
         if(!reminderDoc) throw(new Error("No document.")); 
         reminderDoc.lastPerformed = this.#record.lastPerformed;
         reminderDoc.remindersSent = this.#record.remindersSent;
+        reminderDoc.asleep = this.asleep;
         reminderDoc.save();
 
     }

@@ -33,9 +33,6 @@ var myCronJob = cron.schedule('*/5 * * * *', refreshAgents);
 
 
 
-
-
-
 var server = express();
 
 
@@ -54,9 +51,19 @@ import { ListAgents, MarkedComplete, AddReminder } from './layouts/useHandlebars
 server.use('/public', express.static('static'));
 
 server.post('/sleep', async (req, res, next) => {
-    if(req.body.action) {
-        var doc = await Reminder.findOne({_id: req.body.action});
-        //
+    if(req.body.id) {
+        var doc = await Reminder.findOne({_id: req.body.id});
+        let agent = new AwarenessAgent(doc);
+        if(agent.asleep===true) {
+            await agent.reactivate();
+        } else {            
+            await agent.deactivate();
+        }       
+        
+        
+        res.redirect(`/edit-reminder?id=${req.body.id}`);
+    } else {
+        res.send("No agent found");
     }
 });
 
